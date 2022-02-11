@@ -5,9 +5,7 @@ import { ProductList } from './styles';
 import { api } from '../../services/api';
 import { formatPrice } from '../../util/format';
 import { useCart } from '../../hooks/useCart';
-import { Product } from '../../types' 
 
-/*
 interface Product {
   id: number;
   title: string;
@@ -18,51 +16,38 @@ interface Product {
 interface ProductFormatted extends Product {
   priceFormatted: string;
 }
-*/
+
 interface CartItemsAmount {
   [key: number]: number;
 }
 
 const Home = (): JSX.Element => {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductFormatted[]>([]);
   const { addProduct, cart } = useCart();
 
-  const cartItemsAmount = cart.reduce((sumAmount, product) => {
-
-
-    sumAmount[product.id] += 1
+   const cartItemsAmount = cart.reduce((sumAmount, product) => {
+     
+    sumAmount[product.id] = product.amount
 
     return sumAmount
-  }, {
-    1: 0,
-    2: 0,
-    3: 0,
-    4: 0,
-    5: 0,
-    6: 0,
-  } as CartItemsAmount)
+   }, {} as CartItemsAmount)
 
   useEffect(() => {
     async function loadProducts() {
-      const products = await api.get('products')
-      
-      setProducts(products.data)
+      const responseApi = await api.get('/products')
+
+      const productsFormated = responseApi.data.map((item: Product) => {
+        return { ...item, priceFormatted: formatPrice(item.price)}
+      })
+
+      setProducts(productsFormated)
     }
 
     loadProducts();
   }, []);
 
-  function handleAddProduct(id: number) { 
-    // Setar o produto escolhido ao array cart e chamar a função do Context que seta no localStorage
-
-    const productArray = products.filter(transaction => transaction.id == id)
-
-    const product = productArray[0] 
-
-    addProduct(product)
-      .then()
-  
-    
+  function handleAddProduct(id: number) {
+    addProduct(id)
   }
 
   return (
@@ -74,12 +59,7 @@ const Home = (): JSX.Element => {
             <li key={product.id}>
               <img src={product.image} alt={product.title} />
               <strong>{product.title}</strong>
-              <span>
-                {new Intl.NumberFormat('pt-BR', {
-                  style: 'currency',
-                  currency: 'BRL'
-                }).format(product.price)}
-              </span>
+              <span>{product.priceFormatted}</span>
               <button
                 type="button"
                 data-testid="add-product-button"

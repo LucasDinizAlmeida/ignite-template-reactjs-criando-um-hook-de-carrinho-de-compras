@@ -14,35 +14,50 @@ interface UpdateProductAmount {
 
 interface CartContextData {
   cart: Product[];
-  addProduct: (productId: number) => Promise<void>;
-  removeProduct: (productId: number) => void;
+  addProduct: (productId: Product) => Promise<void>;
+  removeProduct: (product: Product) => void;
   updateProductAmount: ({ productId, amount }: UpdateProductAmount) => void;
+  setCart: (newCart:Product[]) => void
 }
 
-const CartContext = createContext<CartContextData>({} as CartContextData);
+const CartContext = createContext<CartContextData>({} as CartContextData); //Criação do Context com sua tipagem
 
 export function CartProvider({ children }: CartProviderProps): JSX.Element {
   const [cart, setCart] = useState<Product[]>(() => {
-    // const storagedCart = Buscar dados do localStorage
+     const storagedCart = localStorage.getItem('@RocketShoes:cart') //Buscar dados do localStorage
 
-    // if (storagedCart) {
-    //   return JSON.parse(storagedCart);
-    // }
+     if (storagedCart) {
+       return JSON.parse(storagedCart);
+     }
 
     return [];
   });
 
-  const addProduct = async (productId: number) => {
+  
+
+
+  const addProduct = async (product: Product) => { 
+
     try {
-      // TODO
+      
+      const newCart = [ ... cart, product]
+
+      localStorage.setItem('@RocketShoes:cart', JSON.stringify(newCart))
+      setCart(newCart)
     } catch {
       // TODO
     }
   };
 
-  const removeProduct = (productId: number) => {
+  const removeProduct = (product: Product) => {
     try {
-      // TODO
+      
+
+      const newCart = cart.filter(ele => ele.id != product.id)
+
+      localStorage.setItem('@RocketShoes:cart', JSON.stringify(newCart))
+      setCart(newCart)
+
     } catch {
       // TODO
     }
@@ -61,7 +76,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
 
   return (
     <CartContext.Provider
-      value={{ cart, addProduct, removeProduct, updateProductAmount }}
+      value={{ cart, addProduct, removeProduct, updateProductAmount, setCart }}
     >
       {children}
     </CartContext.Provider>
